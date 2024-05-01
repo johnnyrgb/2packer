@@ -4,6 +4,7 @@ import sys
 import BinaryTree
 import pickle
 
+
 class Coder:
     def __init__(self):
         self.__freq = []  # частоты символов
@@ -13,17 +14,30 @@ class Coder:
         self.__codeToWrite = []
 
     # функция кодирования (построение дерева и кодирование входного потока)
-    def encode(self, filename, result_filename):
+    def encode(self, origin_filename, result_filename):
+        """
+        Функция побайтово считывает исходный файл, строит словарь частот. Внутри вызывается приватная функция
+        __encode(freqs, code), которая на основе словаря частот формирует словарь и дерево кодов. Затем открывается
+        результирующий файл, куда записывается сериализованный словарь частот со сдвигом 8 от начала файла. Исходя из
+        текущего положения курсора вычисляется размер записанного словаря частот, и это значение записывается в начало
+        результирующего файла. Затем снова открывается и считывается побайтово исходный файл. Каждый байт кодируется
+        значеним из словаря __codes. Финальный байт, если такой существует, дополняется необходимым количеством нулей.
+        Формирующийся код записывается в результирующий файл побайтово с помощью функции __write_code(code, file).
+        Параллельно с этим подсчитывается длина формирующегося кода (количество бит). Итоговая длина кода записывается в
+        результирующий файл со сдвигом 4 от начала.
+        :param origin_filename: путь к исходному файлу
+        :param result_filename: путь к результирующему файлу
+        :return: True - успех, False - ошибка
+        """
         if os.path.exists(result_filename):
             os.remove(result_filename)
         # сортировка пар "символ - частота" по убыванию частоты
         dictionary = dict()
-        with open(filename, "rb") as origin:  # считывание байтов из исходного файла для построения статистики
+        with open(origin_filename, "rb") as origin:  # считывание байтов из исходного файла для построения статистики
             while True:
                 byte = origin.read(1)
                 if not byte:
                     break
-                #char = byte.decode('latin-1')
                 if byte in dictionary.keys():
                     dictionary[byte] += 1
                 else:
@@ -35,9 +49,8 @@ class Coder:
         # сохранение результатат кодирования
         self.__tree.back_to_root()
         with open(result_filename,
-                  "wb+") as result_file:  #### PICKLE DUMP#### PICKLE DUMP#### PICKLE DUMP#### PICKLE DUMP#### PICKLE DUMP
+                  "wb+") as result_file:
             result_file.seek(8, 0)
-            # result_file.write(termination_symbol)
             serialized_freq = pickle.dumps(self.__freq)
             result_file.write(serialized_freq)
             freq_size = result_file.tell() - 8
@@ -46,18 +59,18 @@ class Coder:
             result_file.write(packed_size)
         # region Кодирование входного потока на основе словаря "символ - код"
         bits_to_read = 0
-        with open(filename, "rb") as origin, open(result_filename, "ab+") as result_file:
+        with open(origin_filename, "rb") as origin, open(result_filename, "ab+") as result_file:
             while True:
                 byte = origin.read(1)
                 if not byte:
-                    break
+                    return False
                 try:
                     current_code = self.__codes[byte]
                     bits_to_read += len(current_code)
                 except KeyError:
                     break
                 current_code = list(current_code)
-                self._add_code(current_code, result_file)
+                self.__write_code(current_code, result_file)
 
             # region Добавление в конец закодированного потока символа конца файла (~)
             if len(self.__codeToWrite) != 0:
@@ -75,6 +88,7 @@ class Coder:
             packed_bits = struct.pack('i', bits_to_read)
             file.write(packed_bits)
             file.seek(0, 0)
+        return True
         # endregion
         # endregion
 
@@ -113,11 +127,25 @@ class Coder:
     def get_code(self):  # получение списка пар "символ-частота" из листьев дерева
         return self.__tree.get_leaf_values()
 
-    def decode(self, filename, result_filename):  # функция декодирования
+    def decode(self, origin_filename, result_filename):
+        """
+        Функция декодирования в начале работы считывает два числа типа integer из начала файла. Первое число --
+        размер словаря частот, второе число -- длина закодированной последовательности в битах. Затем считывается и
+        десериализуется словарь частот. Создаются экземпляры словаря кодов и дерева кодов. С помощью функции
+        __encode(freqs) строится дерево кодов на основе словаря частот. В цикле while исходный файл считывается
+        побайтово. Каждый байт преобразуется в строку вида "01010101". Эта строка перебирается, и осуществляется
+        проход по дереву на основе считанных битов. При считывании очередного бита к переменной read_bit_count
+        прибавляется единица, а их переменной bits_to_read вычитается единицы.Если байт полностью перебран, то
+        считывается следующий байт. Это отслеживает переменная read_bit_count. Окончание закодированный
+        последовательности наступает тогда, когда переменная bits_to_read становится равной 0.
+        :param origin_filename: путь к исходному файлу
+        :param result_filename: путь к результирующему файлу
+        :return: True
+        """
         if os.path.exists(result_filename):
             os.remove(result_filename)
         self.__tree.back_to_root()
-        with open(filename, "rb") as file, open(result_filename, "ab+") as result_filename:
+        with open(origin_filename, "rb") as file, open(result_filename, "ab+") as result_filename:
             bytes_of_dictionary = struct.unpack("i", file.read(4))[0]
             bits_to_read = struct.unpack("i", file.read(4))[0]
             self.__freq = pickle.loads(file.read(bytes_of_dictionary))
@@ -156,12 +184,17 @@ class Coder:
                             result_filename.write(result)
                             if bits_to_read == 0:
                                 break
+        return True
 
-    def _add_code(self, code, file):
-        """На вход подается строка из случайного количества 0 и 1. Элементы строки добавляются в список codeToWrite
+    def __write_code(self, code, file):
+        """
+        На вход подается строка из случайного количества 0 и 1. Элементы строки добавляются в список codeToWrite
         Если в codeToWrite больше 8 элементо (8 бит), то открывается файл для записи и в него записываются все
         байты из начала списка codeToWrite. Допустим в codeToWrite 20 элементов. В файл будут записаны 16 элементов
-        (2 байта), в codeToWrite останется 4 элемента"""
+        (2 байта), в codeToWrite останется 4 элемента
+        :param code: код символа для записи
+        :param file: поток
+        """
         for item in code:
             self.__codeToWrite.append(item)
         if len(self.__codeToWrite) > 8:

@@ -1,7 +1,6 @@
 from PyQt6 import uic, QtGui
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog
 
-
 from Coder import Coder
 import os
 import timeit
@@ -27,7 +26,8 @@ def toPackFileButton_clicked(self):
     coder = Coder()
     result_filename = toPackFilepath + ".2pack"
     print(result_filename)
-    execution_time = timeit.timeit(lambda: coder.encode(filename=toPackFilepath, result_filename=result_filename), number=1)
+    execution_time = timeit.timeit(lambda: coder.encode(origin_filename=toPackFilepath, result_filename=result_filename),
+                                   number=1)
 
     old_size = os.path.getsize(toPackFilepath)
     new_size = os.path.getsize(result_filename)
@@ -38,6 +38,7 @@ def toPackFileButton_clicked(self):
         form.packFactorLabel.setText(f'Степень сжатия: <font color="red">{difference}%</font>')
     form.packTimeLabel.setText(f"Время сжатия: {execution_time:.2f} с")
     os.remove(toPackFilepath)
+
 
 # endregion
 
@@ -57,7 +58,8 @@ def toUnpackFileButton_clicked(self):
     coder = Coder()
     result_filename = toUnpackFilepath[0: len(toUnpackFilepath) - 6]
     print(result_filename)
-    execution_time = timeit.timeit(lambda: coder.decode(filename=toUnpackFilepath, result_filename=result_filename), number=1)
+    execution_time = timeit.timeit(lambda: coder.decode(origin_filename=toUnpackFilepath, result_filename=result_filename),
+                                   number=1)
     form.unpackTimeLabel.setText(f"Время распаковки: {execution_time:.6f} с")
     os.remove(toUnpackFilepath)
 
