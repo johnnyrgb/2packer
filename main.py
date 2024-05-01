@@ -1,5 +1,7 @@
-from PyQt6 import uic
+from PyQt6 import uic, QtGui
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog
+
+
 from Coder import Coder
 import os
 import timeit
@@ -61,13 +63,13 @@ def toUnpackFileButton_clicked(self):
 
 
 # endregion
-# подключаем файл, полученный в QtDesigner
+
 Form, Window = uic.loadUiType("2packer.ui")
 
 app = QApplication([])
 window, form = Window(), Form()
 form.setupUi(window)
-
+window.setWindowIcon(QtGui.QIcon('Resources/icon.ico'))
 window.show()
 
 form.toPackFileButton.setEnabled(False)
