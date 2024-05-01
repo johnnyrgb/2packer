@@ -37,7 +37,6 @@ def toPackFileButton_clicked(self):
     form.packTimeLabel.setText(f"Время сжатия: {execution_time:.2f} с")
     os.remove(toPackFilepath)
 
-
 # endregion
 
 # region Unpack slots

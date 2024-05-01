@@ -23,11 +23,11 @@ class Coder:
                 byte = origin.read(1)
                 if not byte:
                     break
-                char = byte.decode('latin-1')
-                if char in dictionary.keys():
-                    dictionary[char] += 1
+                #char = byte.decode('latin-1')
+                if byte in dictionary.keys():
+                    dictionary[byte] += 1
                 else:
-                    dictionary[char] = 1
+                    dictionary[byte] = 1
         sorted_dictionary = sorted(dictionary.items(), key=lambda item: item[1], reverse=True)  # сортировка словаря
         self.__freq = sorted_dictionary  # сохранение словаря частот
         # вызов рекурсивной функции построения дерева
@@ -51,9 +51,8 @@ class Coder:
                 byte = origin.read(1)
                 if not byte:
                     break
-                char = byte.decode('latin-1')
                 try:
-                    current_code = self.__codes[char]
+                    current_code = self.__codes[byte]
                     bits_to_read += len(current_code)
                 except KeyError:
                     break
