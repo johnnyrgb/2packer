@@ -9,7 +9,7 @@ toPackFilepath = ""
 toUnpackFilepath = ""
 
 
-# rezgion Pack slots
+# region Pack slots
 def selectFile2PacButton_clicked(self):
     global toPackFilepath
     form.packFactorLabel.setText(f'')
@@ -26,8 +26,9 @@ def toPackFileButton_clicked(self):
     coder = Coder()
     result_filename = toPackFilepath + ".2pack"
     print(result_filename)
-    execution_time = timeit.timeit(lambda: coder.encode(origin_filename=toPackFilepath, result_filename=result_filename),
-                                   number=1)
+    execution_time = timeit.timeit(
+        lambda: coder.encode(origin_filename=toPackFilepath, result_filename=result_filename),
+        number=1)
 
     old_size = os.path.getsize(toPackFilepath)
     new_size = os.path.getsize(result_filename)
@@ -58,8 +59,9 @@ def toUnpackFileButton_clicked(self):
     coder = Coder()
     result_filename = toUnpackFilepath[0: len(toUnpackFilepath) - 6]
     print(result_filename)
-    execution_time = timeit.timeit(lambda: coder.decode(origin_filename=toUnpackFilepath, result_filename=result_filename),
-                                   number=1)
+    execution_time = timeit.timeit(
+        lambda: coder.decode(origin_filename=toUnpackFilepath, result_filename=result_filename),
+        number=1)
     form.unpackTimeLabel.setText(f"Время распаковки: {execution_time:.6f} с")
     os.remove(toUnpackFilepath)
 
