@@ -63,7 +63,7 @@ class Coder:
             while True:
                 byte = origin.read(1)
                 if not byte:
-                    return False
+                    break
                 try:
                     current_code = self.__codes[byte]
                     bits_to_read += len(current_code)
@@ -72,7 +72,6 @@ class Coder:
                 current_code = list(current_code)
                 self.__write_code(current_code, result_file)
 
-            # region Добавление в конец закодированного потока символа конца файла (~)
             if len(self.__codeToWrite) != 0:
                 while len(self.__codeToWrite) < 8:
                     self.__codeToWrite.append('0')
@@ -89,7 +88,6 @@ class Coder:
             file.write(packed_bits)
             file.seek(0, 0)
         return True
-        # endregion
         # endregion
 
     # рекурсивная функция построения дерева на основе входного потока
