@@ -1,1 +1,1 @@
-2packer is a simple program which use the Shannon-Fano algorithm to encode and decode any files
+2packer - программа с пользовательским интерфейсом для сжатия/распаковки файлов с помощью алгоритма Шеннона-Фано
